@@ -1,0 +1,65 @@
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #191a1a;
+}
+#map {
+  overflow: visible;
+  margin: 0 auto;
+  width: 80vw;
+  height: 65vh;
+}
+.mapboxgl-popup {
+  max-width: 200px;
+  font: 12px/12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+  margin: auto;
+}
+.mapboxgl-popup-content {
+  width: 150px;
+  padding: 7px;
+  text-align: center;
+  box-shadow: 0px 2px 4px 2px rgba(0, 0, 0, 0.1);
+}
+.titulo {
+  text-align: center;
+  font-family: "Montserrat", sans-serif;
+  font-size: 25px;
+  color: rgb(200, 200, 200);
+}
+.popup-title {
+  font-weight: bold;
+  font-size: 1rem;
+}
+.popup-div p {
+  margin: 4px 0px;
+}
+#title{
+  text-align: center;
+}
+#title h2{
+  color: rgb(200, 200, 200);
+  font-size: 1.8rem;
+}
+#dataDiv {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 25px;
+}
+.data-box {
+  width: 200px;
+  border-radius: 5%;
+  text-align: center;
+  background-color: rgb(200, 200, 200);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.data-box h3:nth-child(2) {
+  height: 35px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.data-box h3 {
+  margin: 5px 0;
+}

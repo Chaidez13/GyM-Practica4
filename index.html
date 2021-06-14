@@ -1,30 +1,179 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<meta charset="UTF-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="utf-8" />
+    <title>Dashboard Covid-19 Mexico</title>
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <script src="map.geojson"></script>
+    <link
+      href="https://api.mapbox.com/mapbox-gl-js/v2.3.0/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.3.0/mapbox-gl.js"></script>
+    <link href="estilos.css" rel="stylesheet" type="text/css" />
+  </head>
 
-	<title>practica4</title>
+  <body>
+    <div class="titulo">
+      <h1>Covid-19 Data-Map</h1>
+    </div>
 
-	<script src="./libraries/p5.js"></script>
-	<script src="./libraries/p5.dom.js"></script>
-	<script src="./libraries/p5.sound.js"></script>
-	<script src="./src/js/algorithms/circles.js"></script>
-	<script src="./src/js/algorithms/lines.js"></script>
-	<script src="./sketch.js"></script>
+    <div id="map"></div>
+    <div id="title"></div>
+    <div id="dataDiv"></div>
+    <script>
+      axios
+        .get(
+          "https://api.apify.com/v2/key-value-stores/vpfkeiYLXPIDIea2T/records/LATEST?disableRedirect=true"
+        )
+        .then(function ({ data }) {
+          //console.log(data);
+          const totalData = [
+            {
+              text: "Infectados",
+              value: ptn(data.infected),
+              color: "#d9833f",
+            },
+            {
+              text: "Decesos",
+              value: ptn(data.deceased),
+              color: "#ff2020",
+            },
+            {
+              text: "Negativos",
+              value: ptn(data.negative),
+              color: "#41a16a",
+            },
+            {
+              text: "Sospechosos",
+              value: ptn(data.suspected),
+              color: "#d9b64a",
+            },
+          ];
 
-	<style>
-		body {
-			margin:0;
-			padding:0;
-			overflow: hidden;
-		}
-		canvas {
-			margin:auto;
-		}
-	</style>
-</head>
-<body>
-</body>
+          mapboxgl.accessToken =
+            "pk.eyJ1IjoiY2hhaWRlejEzIiwiYSI6ImNrZWc5MzFhbDE5OWUyeHM0MWw3OWFnenoifQ.to8bU00Ll8q7XXo06GXhwA";
+
+          var map = new mapboxgl.Map({
+            container: "map",
+            style: "mapbox://styles/mapbox/dark-v10",
+            center: [-102.28257, 21.88231],
+            zoom: 4.3,
+          });
+
+          var popup = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false,
+            anchor: "bottom",
+          });
+
+          map.on("load", function (e) {
+            map.addSource("estados", {
+              type: "geojson",
+              data: "map.geojson",
+            });
+            map.addLayer({
+              id: "status",
+              type: "fill",
+              source: "estados",
+              paint: {
+                "fill-color": ["get", "fill"],
+                "fill-outline-color": "rgb(0, 0, 0)",
+                "fill-opacity": ["get", "fill-opacity"],
+              },
+            });
+            map.addLayer({
+              id: "lines",
+              type: "line",
+              source: "estados",
+              layout: {},
+              paint: {
+                "line-color": "rgb(200, 200, 200)",
+                "line-width": 1.2,
+              },
+            });
+          });
+
+          map.on("mouseenter", "status", function (e) {
+            map.getCanvas().style.cursor = "pointer";
+            popup.setLngLat(e.lngLat);
+            popup.setHTML(
+              `<div class='popup-div'>
+                <span class='popup-title'>
+                    ${e.features[0].properties.entidad_nombre}
+                </span>
+                <p>${e.features[0].properties.casos}</p>
+                <p>${e.features[0].properties.defunciones}</p>
+            </div>`
+            );
+            popup.addTo(map);
+          });
+
+          map.on("mouseleave", "status", function () {
+            map.getCanvas().style.cursor = "";
+            popup.remove();
+          });
+
+          map.on("click", function (e) {
+            setDataBoxes(totalData, "Total");
+          });
+
+          map.on("click", "status", function (e) {
+            const data = [
+              {
+                text: "Infectados",
+                value: e.features[0].properties.casos.split(" ")[0],
+                color: "#d9833f",
+              },
+              {
+                text: "Decesos",
+                value: e.features[0].properties.defunciones.split(" ")[0],
+                color: "#ff2020",
+              },
+            ];
+            setDataBoxes(data, e.features[0].properties.entidad_nombre);
+          });
+
+          setDataBoxes(totalData, "Total");
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+
+      function ptn(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      }
+
+      function setDataBoxes(arr, text) {
+        const dd = document.getElementById("dataDiv");
+        const dt = document.getElementById("title");
+        dd.innerHTML = "";
+        dt.innerHTML = "";
+        const state = document.createElement("h2");
+        const ttext = document.createTextNode(text);
+        state.appendChild(ttext);
+        dt.appendChild(state);
+        arr.forEach((e) => {
+          const box = document.createElement("div");
+          const dTitle = document.createElement("div");
+          box.classList.add("data-box");
+          dTitle.style.backgroundColor = e.color;
+          const title = document.createElement("h3");
+          const text1 = document.createTextNode(e.text);
+          title.appendChild(text1);
+          const value = document.createElement("h3");
+          const text2 = document.createTextNode(e.value);
+          value.appendChild(text2);
+          dTitle.appendChild(title);
+          box.appendChild(dTitle);
+          box.appendChild(value);
+          dd.appendChild(box);
+        });
+      }
+    </script>
+  </body>
 </html>
